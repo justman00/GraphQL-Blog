@@ -17,7 +17,7 @@ services:
             database: d63l9ufnae6753
             user: zqrkedfpuhcmpl
             password: 6ea07aeb2703de515cd2a14b1a0cade1caf169de2647695007009ab8cb158261
-            rawAccess: true
+            # rawAccess: true
             port: '5432'
             migrations: true
             ssl: true
