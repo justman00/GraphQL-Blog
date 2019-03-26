@@ -1,46 +1,47 @@
 import uuid from "uuid";
 
 const Mutation = {
-  createUser(parent, { data }, { db }, info) {
-    const emailTaken = db.users.some(user => user.email === data.email);
+  async createUser(parent, { data }, { prisma }, info) {
+    const emailTaken = await prisma.exists.User({ email: data.email });
 
     if (emailTaken) {
       throw new Error("Email taken");
     }
 
-    const user = {
-      id: uuid(),
-      ...data
-    };
-
-    db.users.push(user);
-
-    return user;
+    return prisma.mutation.createUser({ data }, info);
   },
-  deleteUser(parent, args, { db }, info) {
-    const validUser = db.users.findIndex(user => {
-      return user.id === args.id;
-    });
+  async deleteUser(parent, args, { prisma }, info) {
+    const validUser = await prisma.exists.User({ id: args.id });
 
-    if (validUser === -1) {
+    if (!validUser) {
       throw new Error("User not found");
     }
 
-    const deletedUser = db.users.splice(validUser, 1);
+    return prisma.mutation.deleteUser({ where: { id: args.id } });
 
-    db.posts = db.posts.filter(post => {
-      const match = post.author === args.id;
+    // const validUser = db.users.findIndex(user => {
+    //   return user.id === args.id;
+    // });
 
-      if (match) {
-        db.comments = db.comments.filter(comment => comment.post !== post.id);
-      }
+    // if (validUser === -1) {
+    //   throw new Error("User not found");
+    // }
 
-      return !match;
-    });
+    // const deletedUser = db.users.splice(validUser, 1);
 
-    db.comments = db.comments.filter(comment => comment.author !== args.id);
+    // db.posts = db.posts.filter(post => {
+    //   const match = post.author === args.id;
 
-    return deletedUser[0];
+    //   if (match) {
+    //     db.comments = db.comments.filter(comment => comment.post !== post.id);
+    //   }
+
+    //   return !match;
+    // });
+
+    // db.comments = db.comments.filter(comment => comment.author !== args.id);
+
+    // return deletedUser[0];
   },
   updateUser(parent, { id, data }, { db }, info) {
     console.log("hi");

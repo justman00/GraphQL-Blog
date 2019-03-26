@@ -5,50 +5,52 @@ const prisma = new Prisma({
   endpoint: "http://localhost:4466"
 });
 
+export { prisma as default };
+
 // prisma.query .mutation .subscription .exists
 
-const createPostForUser = async (authorId, data) => {
-  const userExists = await prisma.exists.User({
-    id: authorId
-  });
+// const createPostForUser = async (authorId, data) => {
+//   const userExists = await prisma.exists.User({
+//     id: authorId
+//   });
 
-  if (!userExists) {
-    throw Error("Author not found");
-  }
+//   if (!userExists) {
+//     throw Error("Author not found");
+//   }
 
-  const post = await prisma.mutation.createPost(
-    {
-      data: {
-        ...data,
-        author: {
-          connect: {
-            id: authorId
-          }
-        }
-      }
-    },
-    "{ author { id name email posts { title id published } } }"
-  );
+//   const post = await prisma.mutation.createPost(
+//     {
+//       data: {
+//         ...data,
+//         author: {
+//           connect: {
+//             id: authorId
+//           }
+//         }
+//       }
+//     },
+//     "{ author { id name email posts { title id published } } }"
+//   );
 
-  return post;
-};
+//   return post;
+// };
 
-const updatePostForUser = async (postId, data) => {
-  const postExists = await prisma.exists.Post({
-    id: postId
-  });
+// const updatePostForUser = async (postId, data) => {
+//   const postExists = await prisma.exists.Post({
+//     id: postId
+//   });
 
-  if (!postExists) {
-    throw Error("Post not found");
-  }
+//   if (!postExists) {
+//     throw Error("Post not found");
+//   }
 
-  const post = await prisma.mutation.updatePost(
-    { data, where: { id: postId } },
-    "{author { id name email posts { title id published } }}"
-  );
+//   const post = await prisma.mutation.updatePost(
+//     { data, where: { id: postId } },
+//     "{author { id name email posts { title id published } }}"
+//   );
 
-  return post;
-};
+//   return post;
+// };
 
 // updatePostForUser("cjtovsp2r00je0790cula5pjp", {
 //   published: false,
