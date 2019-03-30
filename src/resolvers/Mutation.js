@@ -1,6 +1,7 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import getUserId from "../utils/getUserId";
+import getToken from "../utils/getToken";
 
 const Mutation = {
   async login(parent, args, { prisma }, info) {
@@ -16,7 +17,7 @@ const Mutation = {
       throw new Error("Incorrect password");
     }
 
-    const token = jwt.sign({ userId: user.id }, "thisisasecret");
+    const token = getToken(user.id);
 
     return { user, token };
   },
@@ -36,7 +37,7 @@ const Mutation = {
 
     return {
       user,
-      token: jwt.sign({ userId: user.id }, "thisisasecret")
+      token: getToken(user.id)
     };
   },
   async deleteUser(parent, args, { prisma, request }, info) {
@@ -117,7 +118,22 @@ const Mutation = {
     });
 
     if (!postExists) {
-      throw new Error("Unable to delete post");
+      throw new Error("Unable to update post");
+    }
+
+    const publishedTrue = await prisma.exists.Post({
+      id: args.id,
+      published: true
+    });
+
+    if (publishedTrue && !args.data.published === false) {
+      await prisma.mutation.deleteManyComments({
+        where: {
+          post: {
+            id: args.data.post
+          }
+        }
+      });
     }
 
     return prisma.mutation.updatePost(
@@ -130,8 +146,17 @@ const Mutation = {
       info
     );
   },
-  createComment(parent, args, { prisma }, info) {
+  async createComment(parent, args, { prisma, request }, info) {
     const userId = getUserId(request);
+
+    const post = await prisma.exists.Post({
+      id: args.data.post,
+      published: true
+    });
+
+    if (!post) {
+      throw new Error("Can not add a comment to an unpublished post");
+    }
 
     return prisma.mutation.createComment(
       {
@@ -152,7 +177,7 @@ const Mutation = {
       info
     );
   },
-  async deleteComment(parent, args, { prisma }, info) {
+  async deleteComment(parent, args, { prisma, request }, info) {
     const userId = getUserId(request);
 
     const commentExists = await prisma.exists.Comment({
@@ -175,7 +200,7 @@ const Mutation = {
       info
     );
   },
-  async updateComment(parent, args, { prisma }, info) {
+  async updateComment(parent, args, { prisma, request }, info) {
     const userId = getUserId(request);
 
     const commentExists = await prisma.exists.Comment({
